@@ -171,7 +171,7 @@ int main(void)
     int img_width, img_height, colorChannels;
 
     unsigned char* tex_bytes = stbi_load(
-        "3D/brickwall.jpg",
+        "3D/MicroRecon.png",
         &img_width,
         &img_height,
         &colorChannels,
@@ -188,11 +188,11 @@ int main(void)
 
     glTexImage2D(GL_TEXTURE_2D,
         0,
-        GL_RGB,
+        GL_RGBA,
         img_width,
         img_height,
         0,
-        GL_RGB,
+        GL_RGBA,
         GL_UNSIGNED_BYTE,
         tex_bytes);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -358,7 +358,7 @@ int main(void)
     glLinkProgram(shaderProg);//compile to make sure computer remembers
 
     //using shader class
-    Shader mainObjShader("Shaders/sample.vert", "Shaders/sample.frag");
+    Shader mainObjShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
 
     //SKYBOX //////////////////////////////////////////////////////////////////////////
     //create vertex shader
@@ -807,8 +807,6 @@ int main(void)
 
         for (int i = 0; i < (int)vecModels.size(); i++)
         {
-            //vecModels[i]->draw(&shaderProg, &VAO, &fullVertexData);
-            vecModels[i]->rotate('x', thetaY);
             vecModels[i]->draw(&mainObjShader, &VAO, &fullVertexData);
         }
        
