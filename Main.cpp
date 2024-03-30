@@ -125,17 +125,6 @@ void Key_Callback(GLFWwindow* window,
 };
 
 
-const char* shaderCompiler(std::string path) {
-    //compile skybox fragment
-    std::fstream src(path);
-    std::stringstream buffer;
-
-    buffer << src.rdbuf();
-
-    std::string s = buffer.str();
-    return s.c_str();
-}
-
 int main(void)
 {
     
@@ -297,25 +286,6 @@ int main(void)
 
     glfwSetKeyCallback(window, Key_Callback);
 
-    //OBJECT SHADER ///////////////////////////////////////////////////////////////////////////
-    //compile shader vertex
-    std::fstream vertSrc("Shaders/sample.vert");
-    std::stringstream vertBuff;
-
-    vertBuff << vertSrc.rdbuf();
-
-    std::string vertS = vertBuff.str();
-    const char* v = vertS.c_str();
-
-    //compile shader fragment
-    std::fstream fragSrc("Shaders/sample.frag");
-    std::stringstream fragBuff;
-
-    fragBuff << fragSrc.rdbuf();
-
-    std::string fragS = fragBuff.str();
-    const char* f = fragS.c_str();
-
     //SKYBOX ////////////////////////////////////////////////////////////////////////////
     //compile skybox vertex
     std::fstream vertSkyboxSrc("Shaders/skybox.vert");
@@ -335,30 +305,11 @@ int main(void)
     std::string fragSB = fragSkyboxBuff.str();
     const char* fsb = fragSB.c_str();
 
-    //OBJECT //////////////////////////////////////////////////////////////////////
-    //create vertex shader(used for movements)
-    GLuint vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexShader, 1, &v, NULL);
-
-    glCompileShader(vertexShader);
-
-    //create frag shader (our objects are turned into pixels/fragments which we will use to color in an object)
-    GLuint fragShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(fragShader, 1, &f, NULL);
-
-    glCompileShader(fragShader);
-
-    //create shader program that'll just run both frag and vert together as one.
-    GLuint shaderProg = glCreateProgram();
-    glAttachShader(shaderProg, vertexShader);
-    glAttachShader(shaderProg, fragShader);
-
-    glLinkProgram(shaderProg);//compile to make sure computer remembers
-
     //using shader class
     Shader mainObjShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
+
+    //shader of skybox
+    Shader skyboxShader("Shaders/skybox.vert", "Shaders/skybox.frag");
 
     //SKYBOX //////////////////////////////////////////////////////////////////////////
     //create vertex shader
@@ -404,16 +355,6 @@ int main(void)
         path.c_str()
     );  
 
-    GLfloat UV[]{
-        0.f, 1.f,
-        0.f, 0.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        1.f, 1.f,
-        1.f, 0.f,
-        0.f, 1.f,
-        0.f, 0.f
-    };
 
     //vector to hold our tangents
     std::vector<glm::vec3> tangents;
@@ -540,18 +481,6 @@ int main(void)
         fullVertexData.push_back(bitangents[i].y);
         fullVertexData.push_back(bitangents[i].z);
     }
-
-
-    GLfloat vertices[]{//def of 3d mdel
-        //xyz
-        0.f, 0.5,0.f,
-        -0.5f, -0.5f,0.f,
-        0.5f,-0.5f,0.f
-    };
-
-    GLuint indices[] {
-        0,1,2
-    };
     
     //SKYBOX
     //Vertices for the cube
@@ -749,7 +678,7 @@ int main(void)
         //      SKYBOX
         glDepthMask(GL_FALSE);
         glDepthFunc(GL_LEQUAL);
-        glUseProgram(skyboxShaderProg);
+        skyboxShader.use();
 
         glm::mat4 sky_view = glm::mat4(1.f);
         sky_view = glm::mat4(
@@ -758,14 +687,9 @@ int main(void)
             //then reconvert it to a mat4
         );
 
-        unsigned int skyboxViewLoc = glGetUniformLocation(skyboxShaderProg, "view");
-        glUniformMatrix4fv(skyboxViewLoc, 1, GL_FALSE, glm::value_ptr(sky_view));
+        skyboxShader.setMat4("view", sky_view);
 
-        unsigned int skyboxProjLoc = glGetUniformLocation(skyboxShaderProg, "projection");
-        glUniformMatrix4fv(skyboxProjLoc,
-            1,
-            GL_FALSE,
-            glm::value_ptr(projection));
+        skyboxShader.setMat4("projection", projection);
 
         glBindVertexArray(skyboxVAO);
         glActiveTexture(GL_TEXTURE0);
@@ -802,8 +726,6 @@ int main(void)
         GLuint mainObjMaptex0Address = glGetUniformLocation(mainObjShader.getID(), "norm_tex");
         glBindTexture(GL_TEXTURE_2D, norm_tex);
         glUniform1i(mainObjMaptex0Address, 1);
-
-        thetaY += 100.f * deltaTime;
 
         for (int i = 0; i < (int)vecModels.size(); i++)
         {

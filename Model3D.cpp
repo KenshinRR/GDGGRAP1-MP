@@ -5,9 +5,9 @@ Model3D::Model3D(glm::vec3 position)
 	this->position = position;
 	this->rotation = { 0,0,0 };
 	this->scale = { 0.1f,0.1f,0.1f };
-    theta_x = 1;
-    theta_y = 0;
-    theta_z = 0;
+    theta_x = 0.f;
+    theta_y = 0.f;
+    theta_z = 0.f;
 
     /* Initialize the identity matrix */
     this->identity_matrix4 = glm::mat4(1.0f);
@@ -41,7 +41,7 @@ void Model3D::draw(GLuint* shaderProg, GLuint* VAO, std::vector<GLfloat>* fullVe
 
     transformation_matrix = glm::rotate(
         transformation_matrix,
-        glm::radians(-90.f),
+        glm::radians(theta_z),
         glm::normalize(glm::vec3(0, 0, 1))
     );
 
