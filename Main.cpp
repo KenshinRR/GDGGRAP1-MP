@@ -116,7 +116,7 @@ void Key_Callback(GLFWwindow* window,
         glm::vec3 offset = { 0.5,0.5,0.5 };//don't make it spawn on you code
         //cooldown check and reset
         if (coolDown <= 0) {
-            vecModels.push_back(new Model3D(cameraPos + Front * offset));
+            //vecModels.push_back(new Model3D(cameraPos + Front * offset));
             coolDown = 0;
         }
     }
@@ -124,43 +124,11 @@ void Key_Callback(GLFWwindow* window,
     if (glfwGetKey(window, GLFW_KEY_K)) brightness -= 1.0f;
 };
 
-
-int main(void)
-{
-    
-    vecModels.push_back(new Model3D({ 0,0,0 })); //create model object
-    GLFWwindow* window;
-
-    float height = 800.0f;
-    float width = 800.0f;
-
-
-
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(width, height, "Reblando", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-    gladLoadGL();
-
-    
-
-    stbi_set_flip_vertically_on_load(true);
-
-    //      MAIN OBJ TEXTURE
+GLuint createTexture(const char* fileName) {
     int img_width, img_height, colorChannels;
 
     unsigned char* tex_bytes = stbi_load(
-        "3D/MicroRecon.png",
+        fileName,
         &img_width,
         &img_height,
         &colorChannels,
@@ -187,11 +155,21 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(tex_bytes);
 
-    //      NORMAL MAP TEXTURE
+    return texture;
+}
+
+void useTexture(Shader shaderProg, GLuint texture) {
+    glActiveTexture(GL_TEXTURE0);
+    GLuint mainObjtex0Address = glGetUniformLocation(shaderProg.getID(), "tex0");
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glUniform1i(mainObjtex0Address, 0);
+}
+
+GLuint createNormTexture(const char* fileName) {
     int img_width_map, img_height_map, colorChannels_map;
 
     unsigned char* tex_bytes_norm = stbi_load(
-        "3D/brickwall_normal.jpg",
+        fileName,
         &img_width_map,
         &img_height_map,
         &colorChannels_map,
@@ -221,125 +199,11 @@ int main(void)
     glGenerateMipmap(GL_TEXTURE_2D);
     stbi_image_free(tex_bytes_norm);
 
-    //faces of the skybox
-    //std::string facesSkybox[]{
-    //    "Skybox/rainbow_rt.png", //RIGHT
-    //    "Skybox/rainbow_lf.png", //left
-    //    "Skybox/rainbow_up.png", //up
-    //    "Skybox/rainbow_dn.png", //down
-    //    "Skybox/rainbow_ft.png", //front
-    //    "Skybox/rainbow_bk.png", //back
-    //};
+    return norm_tex;
+}
 
-    //faces of the skybox
-    std::string facesSkybox[]{
-        "Skybox/image3x2.png", //RIGHT
-        "Skybox/image1x2.png", //left
-        "Skybox/image2x1.png", //up
-        "Skybox/image2x3.png", //down
-        "Skybox/image2x2.png", //front
-        "Skybox/image4x2.png", //back
-    };
-
-    unsigned int skyboxTex;
-    glGenTextures(1, &skyboxTex);
-
-    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
-
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-    for (unsigned int i = 0; i < 6; i++)
-    {
-        int w, h, skyCChannel;
-
-        stbi_set_flip_vertically_on_load(false);
-
-        unsigned char* data = stbi_load(facesSkybox[i].c_str(), &w, &h, &skyCChannel, 0);
-
-        if (data) {
-            glTexImage2D(
-                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
-                0,
-                GL_RGBA,
-                w,
-                h,
-                0,
-                GL_RGBA,
-                GL_UNSIGNED_BYTE,
-                data
-            );
-
-            stbi_image_free(data);
-        }
-    }
-
-    stbi_set_flip_vertically_on_load(true);
-
-    glEnable(GL_DEPTH_TEST);
-
-    glViewport(0, 0, 800, 800);
-
-    glfwSetKeyCallback(window, Key_Callback);
-
-    //SKYBOX ////////////////////////////////////////////////////////////////////////////
-    //compile skybox vertex
-    std::fstream vertSkyboxSrc("Shaders/skybox.vert");
-    std::stringstream vertSkyboxBuff;
-
-    vertSkyboxBuff << vertSkyboxSrc.rdbuf();
-
-    std::string vertSB = vertSkyboxBuff.str();
-    const char* vsb = vertSB.c_str();
-
-    //compile skybox fragment
-    std::fstream fragSkyboxSrc("Shaders/skybox.frag");
-    std::stringstream fragSkyboxBuff;
-
-    fragSkyboxBuff << fragSkyboxSrc.rdbuf();
-
-    std::string fragSB = fragSkyboxBuff.str();
-    const char* fsb = fragSB.c_str();
-
-    //using shader class
-    Shader mainObjShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
-
-    //shader of skybox
-    Shader skyboxShader("Shaders/skybox.vert", "Shaders/skybox.frag");
-
-    //SKYBOX //////////////////////////////////////////////////////////////////////////
-    //create vertex shader
-    GLuint vertexSkyboxShader = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexSkyboxShader, 1, &vsb, NULL);
-
-    glCompileShader(vertexSkyboxShader);
-
-    //create frag shader (our objects are turned into pixels/fragments which we will use to color in an object)
-    GLuint fragSkyboxShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(fragSkyboxShader, 1, &fsb, NULL);
-
-    glCompileShader(fragSkyboxShader);
-
-    //create shader program that'll just run both frag and vert together as one.
-    GLuint skyboxShaderProg = glCreateProgram();
-    glAttachShader(skyboxShaderProg, vertexSkyboxShader);
-    glAttachShader(skyboxShaderProg, fragSkyboxShader);
-
-    glLinkProgram(skyboxShaderProg);//compile to make sure computer remembers
-
-    /////////////////////////////////////////////////////////////////////////////////////
-
-    //set cursor to NONEXISTANT and make mouse events be called
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouse_callback);
-
-    std::string path = "3D/MicroRecon.obj";
+std::vector<GLfloat> getFullVertexData(std::string fileName) {
+    std::string path = fileName;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> material;
     std::string warning, error;
@@ -353,7 +217,7 @@ int main(void)
         &warning,
         &error,
         path.c_str()
-    );  
+    );
 
 
     //vector to hold our tangents
@@ -361,7 +225,7 @@ int main(void)
     std::vector<glm::vec3> bitangents;
 
     //for loop that will go over all the verteces by 3
-    for (int i = 0; i < shapes[0].mesh.indices.size(); i+=3)
+    for (int i = 0; i < shapes[0].mesh.indices.size(); i += 3)
     {
         tinyobj::index_t vData1 = shapes[0].mesh.indices[i];
         tinyobj::index_t vData2 = shapes[0].mesh.indices[i + 1];
@@ -431,7 +295,7 @@ int main(void)
         bitangents.push_back(bitangent);
         bitangents.push_back(bitangent);
     }
-   
+
     //get the  indices array OF mesh that will be placed into vbo
     //std::vector<GLuint> mesh_indices;
     std::vector<GLfloat> fullVertexData;
@@ -481,6 +345,124 @@ int main(void)
         fullVertexData.push_back(bitangents[i].y);
         fullVertexData.push_back(bitangents[i].z);
     }
+
+    return fullVertexData;
+}
+
+int main(void)
+{
+    GLFWwindow* window;
+
+    float height = 800.0f;
+    float width = 800.0f;
+
+
+
+    /* Initialize the library */
+    if (!glfwInit())
+        return -1;
+
+    /* Create a windowed mode window and its OpenGL context */
+    window = glfwCreateWindow(width, height, "Jaropojop & Reblando", NULL, NULL);
+    if (!window)
+    {
+        glfwTerminate();
+        return -1;
+    }
+
+    /* Make the window's context current */
+    glfwMakeContextCurrent(window);
+    gladLoadGL();
+
+    stbi_set_flip_vertically_on_load(true);  
+
+    //      MAIN OBJ TEXTURE
+    GLuint texture = createTexture("3D/MicroRecon.png");
+    GLuint dualStrikerTexture = createTexture("3D/DualStriker.png");
+
+    //loading the .obj file
+    std::vector<GLfloat> fullVertexData = getFullVertexData("3D/MicroRecon.obj");
+    std::vector<GLfloat> dualStrikerFullVertexData = getFullVertexData("3D/DualStriker.obj");
+
+    //      OBJ CREATIONS
+    //vecModels.push_back(new Model3D({ 0,0,0 })); //create model object
+    Model3D microRecon({ 0,0,0 },
+        fullVertexData,
+        "Shaders/mainObj.vert", "Shaders/mainObj.frag");
+    Model3D dualStriker({ 0,0,2 },
+        dualStrikerFullVertexData,
+        "Shaders/mainObj.vert", "Shaders/mainObj.frag");
+
+    //      OBJECTS
+    microRecon.initVAO();
+    dualStriker.initVAO();
+
+    //      NORMAL MAP TEXTURE
+    //Gluin norm_tex = createNormTexture("");
+
+    //shader of skybox
+    Shader skyboxShader("Shaders/skybox.vert", "Shaders/skybox.frag");
+
+    //faces of the skybox
+    std::string facesSkybox[]{
+        "Skybox/image3x2.png", //RIGHT
+        "Skybox/image1x2.png", //left
+        "Skybox/image2x1.png", //up
+        "Skybox/image2x3.png", //down
+        "Skybox/image2x2.png", //front
+        "Skybox/image4x2.png", //back
+    };
+
+    unsigned int skyboxTex;
+    glGenTextures(1, &skyboxTex);
+
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyboxTex);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    for (unsigned int i = 0; i < 6; i++)
+    {
+        int w, h, skyCChannel;
+
+        stbi_set_flip_vertically_on_load(false);
+
+        unsigned char* data = stbi_load(facesSkybox[i].c_str(), &w, &h, &skyCChannel, 0);
+
+        if (data) {
+            glTexImage2D(
+                GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
+                0,
+                GL_RGBA,
+                w,
+                h,
+                0,
+                GL_RGBA,
+                GL_UNSIGNED_BYTE,
+                data
+            );
+
+            stbi_image_free(data);
+        }
+    }
+
+    stbi_set_flip_vertically_on_load(true);
+
+    glEnable(GL_DEPTH_TEST);
+
+    glViewport(0, 0, 800, 800);
+
+    glfwSetKeyCallback(window, Key_Callback);
+
+    /////////////////////////////////////////////////////////////////////////////////////
+
+    //set cursor to NONEXISTANT and make mouse events be called
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouse_callback);
     
     //SKYBOX
     //Vertices for the cube
@@ -515,84 +497,6 @@ int main(void)
         3,7,6,
         6,2,3
     };
-
-    //object
-    GLuint VAO, VBO;// EBO;// VBO_UV;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        //
-        sizeof(GLfloat) * fullVertexData.size(),
-        fullVertexData.data(),
-        GL_DYNAMIC_DRAW
-    );
-        
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)0
-
-    );
-    glEnableVertexAttribArray(0);
-
-    GLintptr litPtr = 3 * sizeof(float);
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)litPtr
-
-    );
-    glEnableVertexAttribArray(1);
-
-    GLintptr uvPtr = 6 * sizeof(float);
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)uvPtr
-    );
-    glEnableVertexAttribArray(2);
-
-    //tangent point
-    GLintptr tangentPtr = 8 * sizeof(float);
-    glVertexAttribPointer(
-        3, //3 == tangent
-        3, //T (XYZ)
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(float),
-        (void*)tangentPtr
-    );
-    glEnableVertexAttribArray(3);
-
-    //bitangent 
-    GLintptr bitangentPtr = 11 * sizeof(float);
-    glVertexAttribPointer(
-        4, //4 == bitangent
-        3, //B(XYZ)
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(float),
-        (void*)bitangentPtr
-    );
-    glEnableVertexAttribArray(4);
 
     //skybox
     unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
@@ -700,38 +604,34 @@ int main(void)
         glDepthFunc(GL_LESS);
 
         //      MAIN OBJECT
-        mainObjShader.use();
+        //mainObjShader.use();
 
-        //camera
-        mainObjShader.setMat4("projection", projection);
-        mainObjShader.setMat4("view", viewMatrix);
+        ////camera
+        //mainObjShader.setMat4("projection", projection);
+        //mainObjShader.setMat4("view", viewMatrix);
 
-        //light
-        mainObjShader.setVec3("lightPos", lightPos);
-        mainObjShader.setVec3("lightColor", lightColor);
-        mainObjShader.setInt("ambientStr", ambientStr);
-        mainObjShader.setVec3("ambientColor", ambientColor);
-        mainObjShader.setVec3("cameraPos", cameraPos);
-        mainObjShader.setFloat("specStr", specStr);
-        mainObjShader.setFloat("specPhong", specPhong);
-        mainObjShader.setFloat("brightness", brightness);
+        ////light
+        //mainObjShader.setVec3("lightPos", lightPos);
+        //mainObjShader.setVec3("lightColor", lightColor);
+        //mainObjShader.setInt("ambientStr", ambientStr);
+        //mainObjShader.setVec3("ambientColor", ambientColor);
+        //mainObjShader.setVec3("cameraPos", cameraPos);
+        //mainObjShader.setFloat("specStr", specStr);
+        //mainObjShader.setFloat("specPhong", specPhong);
+        //mainObjShader.setFloat("brightness", brightness);
 
         //texture
-        glActiveTexture(GL_TEXTURE0);
-        GLuint mainObjtex0Address = glGetUniformLocation(mainObjShader.getID(), "tex0");
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(mainObjtex0Address, 0);
+        useTexture(microRecon.getShader(), texture);
 
-        glActiveTexture(GL_TEXTURE1);
+        /*glActiveTexture(GL_TEXTURE1);
         GLuint mainObjMaptex0Address = glGetUniformLocation(mainObjShader.getID(), "norm_tex");
         glBindTexture(GL_TEXTURE_2D, norm_tex);
-        glUniform1i(mainObjMaptex0Address, 1);
+        glUniform1i(mainObjMaptex0Address, 1);*/
 
-        for (int i = 0; i < (int)vecModels.size(); i++)
-        {
-            vecModels[i]->draw(&mainObjShader, &VAO, &fullVertexData);
-        }
+        microRecon.draw();
        
+        useTexture(microRecon.getShader(), dualStrikerTexture);
+        dualStriker.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -741,8 +641,7 @@ int main(void)
         
 
     }
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
+    
    /* glDeleteBuffers(1, &EBO);*/
     glfwTerminate();
     return 0;

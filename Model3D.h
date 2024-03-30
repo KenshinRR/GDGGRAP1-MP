@@ -23,12 +23,33 @@ private:
 	float theta_z;
 	glm::mat4 identity_matrix4;
 
-public:
-	Model3D(glm::vec3 position);
+	Shader shaderProg;
+	GLuint VAO, VBO;
+	std::vector<GLfloat> fullVertexData;
 
 public:
-	void draw(GLuint* shaderProg, GLuint* VAO, std::vector<GLfloat>* fullVertexData);
-	void draw(Shader* shaderProg, GLuint* VAO, std::vector<GLfloat>* fullVertexData);
+	Model3D(glm::vec3 position,
+		const char* vertexPath,
+		const char* fragmentPath);
+
+	Model3D(glm::vec3 position,
+		std::vector<GLfloat> fullVertexData,
+		const char* vertexPath, 
+		const char* fragmentPath);
+
+public:
+	void draw();
 
 	void rotate(char axis, float theta);
+
+	void initVAO();
+
+	void deleteVAO();
+
+public:
+	void setFullVertexData(std::vector<GLfloat> fullVertexData);
+
+public:
+	Shader getShader();
+	unsigned int getShaderID();
 };
