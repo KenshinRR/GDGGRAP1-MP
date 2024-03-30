@@ -39,6 +39,7 @@ public:
 
 public:
 	void draw();
+	void draw(Shader* shaderProgB, GLuint* VAOB, std::vector<GLfloat>* fullVertexDataB);
 
 	void rotate(char axis, float theta);
 

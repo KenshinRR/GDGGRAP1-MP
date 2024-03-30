@@ -158,9 +158,9 @@ GLuint createTexture(const char* fileName) {
     return texture;
 }
 
-void useTexture(Shader shaderProg, GLuint texture) {
+void useTexture(GLuint shaderProg, GLuint texture) {
     glActiveTexture(GL_TEXTURE0);
-    GLuint mainObjtex0Address = glGetUniformLocation(shaderProg.getID(), "tex0");
+    GLuint mainObjtex0Address = glGetUniformLocation(shaderProg, "tex0");
     glBindTexture(GL_TEXTURE_2D, texture);
     glUniform1i(mainObjtex0Address, 0);
 }
@@ -349,6 +349,87 @@ std::vector<GLfloat> getFullVertexData(std::string fileName) {
     return fullVertexData;
 }
 
+std::vector<GLuint> createVAOandVBO(std::vector<GLfloat> fullVertexData) {
+    GLuint VAO, VBO;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        //
+        sizeof(GLfloat) * fullVertexData.size(),
+        fullVertexData.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)0
+
+    );
+    glEnableVertexAttribArray(0);
+
+    GLintptr litPtr = 3 * sizeof(float);
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)litPtr
+
+    );
+    glEnableVertexAttribArray(1);
+
+    GLintptr uvPtr = 6 * sizeof(float);
+    glVertexAttribPointer(
+        2,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)uvPtr
+    );
+    glEnableVertexAttribArray(2);
+
+    //tangent point
+    GLintptr tangentPtr = 8 * sizeof(float);
+    glVertexAttribPointer(
+        3, //3 == tangent
+        3, //T (XYZ)
+        GL_FLOAT,
+        GL_FALSE,
+        14 * sizeof(float),
+        (void*)tangentPtr
+    );
+    glEnableVertexAttribArray(3);
+
+    //bitangent 
+    GLintptr bitangentPtr = 11 * sizeof(float);
+    glVertexAttribPointer(
+        4, //4 == bitangent
+        3, //B(XYZ)
+        GL_FLOAT,
+        GL_FALSE,
+        14 * sizeof(float),
+        (void*)bitangentPtr
+    );
+    glEnableVertexAttribArray(4);
+
+    return { VAO, VBO };
+}
+
 int main(void)
 {
     GLFWwindow* window;
@@ -385,6 +466,9 @@ int main(void)
     std::vector<GLfloat> dualStrikerFullVertexData = getFullVertexData("3D/DualStriker.obj");
 
     //      OBJ CREATIONS
+
+    Shader microReconShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
+    Shader dualStrikerShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
     //vecModels.push_back(new Model3D({ 0,0,0 })); //create model object
     Model3D microRecon({ 0,0,0 },
         fullVertexData,
@@ -498,6 +582,87 @@ int main(void)
         6,2,3
     };
 
+    //obj VAO, VBO
+    GLuint dualStrikerVAO = createVAOandVBO(dualStrikerFullVertexData)[0];
+    GLuint dualStrikerVBO = createVAOandVBO(dualStrikerFullVertexData)[1];
+
+    GLuint VAO, VBO;
+
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
+
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+
+    glBufferData(
+        GL_ARRAY_BUFFER,
+        //
+        sizeof(GLfloat) * fullVertexData.size(),
+        fullVertexData.data(),
+        GL_DYNAMIC_DRAW
+    );
+
+    glVertexAttribPointer(
+        0,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)0
+
+    );
+    glEnableVertexAttribArray(0);
+
+    GLintptr litPtr = 3 * sizeof(float);
+    glVertexAttribPointer(
+        1,
+        3,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)litPtr
+
+    );
+    glEnableVertexAttribArray(1);
+
+    GLintptr uvPtr = 6 * sizeof(float);
+    glVertexAttribPointer(
+        2,
+        2,
+        GL_FLOAT,
+        GL_FALSE,
+
+        14 * sizeof(float),
+        (void*)uvPtr
+    );
+    glEnableVertexAttribArray(2);
+
+    //tangent point
+    GLintptr tangentPtr = 8 * sizeof(float);
+    glVertexAttribPointer(
+        3, //3 == tangent
+        3, //T (XYZ)
+        GL_FLOAT,
+        GL_FALSE,
+        14 * sizeof(float),
+        (void*)tangentPtr
+    );
+    glEnableVertexAttribArray(3);
+
+    //bitangent 
+    GLintptr bitangentPtr = 11 * sizeof(float);
+    glVertexAttribPointer(
+        4, //4 == bitangent
+        3, //B(XYZ)
+        GL_FLOAT,
+        GL_FALSE,
+        14 * sizeof(float),
+        (void*)bitangentPtr
+    );
+    glEnableVertexAttribArray(4);
+
     //skybox
     unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
 
@@ -607,21 +772,41 @@ int main(void)
         //mainObjShader.use();
 
         ////camera
-        //mainObjShader.setMat4("projection", projection);
-        //mainObjShader.setMat4("view", viewMatrix);
+        //mainobjshader.setmat4("projection", projection);
+        //mainobjshader.setmat4("view", viewmatrix);
 
         ////light
-        //mainObjShader.setVec3("lightPos", lightPos);
-        //mainObjShader.setVec3("lightColor", lightColor);
-        //mainObjShader.setInt("ambientStr", ambientStr);
-        //mainObjShader.setVec3("ambientColor", ambientColor);
-        //mainObjShader.setVec3("cameraPos", cameraPos);
-        //mainObjShader.setFloat("specStr", specStr);
-        //mainObjShader.setFloat("specPhong", specPhong);
-        //mainObjShader.setFloat("brightness", brightness);
+        //mainobjshader.setvec3("lightpos", lightpos);
+        //mainobjshader.setvec3("lightcolor", lightcolor);
+        //mainobjshader.setint("ambientstr", ambientstr);
+        //mainobjshader.setvec3("ambientcolor", ambientcolor);
+        //mainobjshader.setvec3("camerapos", camerapos);
+        //mainobjshader.setfloat("specstr", specstr);
+        //mainobjshader.setfloat("specphong", specphong);
+        //mainobjshader.setfloat("brightness", brightness);
+
+        //      note for future: put this in a class function
+        microRecon.getShader().use();
+        ////camera
+        microRecon.getShader().setMat4("projection", projection);
+        microRecon.getShader().setMat4("view", viewMatrix);
+
+        //light
+        microRecon.getShader().setVec3("lightpos", lightPos);
+        microRecon.getShader().setVec3("lightcolor", lightColor);
+        microRecon.getShader().setInt("ambientstr", ambientStr);
+        microRecon.getShader().setVec3("ambientcolor", ambientColor);
+        microRecon.getShader().setVec3("camerapos", cameraPos);
+        microRecon.getShader().setFloat("specstr", specStr);
+        microRecon.getShader().setFloat("specphong", specPhong);
+        microRecon.getShader().setFloat("brightness", brightness);
 
         //texture
-        useTexture(microRecon.getShader(), texture);
+        //useTexture((microRecon.getShaderID()), texture);
+        glActiveTexture(GL_TEXTURE0);
+        GLuint mainObjtex0Address = glGetUniformLocation(microRecon.getShaderID(), "tex0");
+        glBindTexture(GL_TEXTURE_2D, texture);
+        glUniform1i(mainObjtex0Address, 0);
 
         /*glActiveTexture(GL_TEXTURE1);
         GLuint mainObjMaptex0Address = glGetUniformLocation(mainObjShader.getID(), "norm_tex");
@@ -629,9 +814,10 @@ int main(void)
         glUniform1i(mainObjMaptex0Address, 1);*/
 
         microRecon.draw();
+        //microRecon.draw(&microReconShader, &VAO, &fullVertexData);
        
-        useTexture(microRecon.getShader(), dualStrikerTexture);
-        dualStriker.draw();
+        /*useTexture(microRecon.getShader(), dualStrikerTexture);
+        dualStriker.draw();*/
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -642,6 +828,12 @@ int main(void)
 
     }
     
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+
+    dualStriker.deleteVAO();
+    microRecon.deleteVAO();
+
    /* glDeleteBuffers(1, &EBO);*/
     glfwTerminate();
     return 0;
