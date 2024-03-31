@@ -23,7 +23,7 @@ private:
 	float theta_z;
 	glm::mat4 identity_matrix4;
 
-	Shader shaderProg;
+	Shader* shaderProg;
 	GLuint VAO, VBO;
 	std::vector<GLfloat> fullVertexData;
 
@@ -51,6 +51,6 @@ public:
 	void setFullVertexData(std::vector<GLfloat> fullVertexData);
 
 public:
-	Shader getShader();
+	Shader* getShader();
 	unsigned int getShaderID();
 };

@@ -2,8 +2,7 @@
 
 Model3D::Model3D(glm::vec3 position,
     const char* vertexPath,
-    const char* fragmentPath) : 
-    shaderProg(vertexPath, fragmentPath)
+    const char* fragmentPath)
 {
 	this->position = position;
 	this->rotation = { 0,0,0 };
@@ -14,12 +13,13 @@ Model3D::Model3D(glm::vec3 position,
 
     /* Initialize the identity matrix */
     this->identity_matrix4 = glm::mat4(1.0f);
+
+    this->shaderProg = new Shader(vertexPath, fragmentPath);
 }
 
 Model3D::Model3D(glm::vec3 position,
     std::vector<GLfloat> fullVertexData,
-    const char* vertexPath, const char* fragmentPath) :
-    shaderProg(vertexPath, fragmentPath)
+    const char* vertexPath, const char* fragmentPath)
 {
     this->position = position;
     this->rotation = { 0,0,0 };
@@ -32,6 +32,8 @@ Model3D::Model3D(glm::vec3 position,
     this->identity_matrix4 = glm::mat4(1.0f);
 
     this->fullVertexData = fullVertexData;
+
+    this->shaderProg = new Shader(vertexPath, fragmentPath);
 }
 
 void Model3D::draw()
@@ -67,10 +69,10 @@ void Model3D::draw()
     );
 
     //setting the transformation
-    this->shaderProg.setMat4("transform", transformation_matrix);
+    this->shaderProg->setMat4("transform", transformation_matrix);
 
     //tell open GL to use this shader for the VAOs below
-    this->shaderProg.use();
+    this->shaderProg->use();
 
     //bind the VAO to prep for drawing
     glBindVertexArray(this->VAO);
@@ -231,13 +233,13 @@ void Model3D::setFullVertexData(std::vector<GLfloat> fullVertexData)
     this->fullVertexData = fullVertexData;
 }
 
-Shader Model3D::getShader()
+Shader* Model3D::getShader()
 {
     return this->shaderProg;
 }
 
 unsigned int Model3D::getShaderID()
 {
-    return this->shaderProg.getID();
+    return this->shaderProg->getID();
 }
 

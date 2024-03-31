@@ -12,6 +12,8 @@
 
 #include "Model3D.h"
 #include "Shader.h"
+#include "Light.h"
+#include "PerspectiveCamera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -473,11 +475,11 @@ int main(void)
     Model3D microRecon({ 0,0,0 },
         fullVertexData,
         "Shaders/mainObj.vert", "Shaders/mainObj.frag");
-    Model3D dualStriker({ 0,0,2 },
+    Model3D dualStriker({ -0.5,0,0 },
         dualStrikerFullVertexData,
         "Shaders/mainObj.vert", "Shaders/mainObj.frag");
 
-    //      OBJECTS
+    //      OBJECTS VAO
     microRecon.initVAO();
     dualStriker.initVAO();
 
@@ -720,6 +722,12 @@ int main(void)
 
     float specPhong = 16;
 
+    //      LIGHT
+    Light mainLight(lightPos, lightColor, ambientStr, specStr, specPhong);
+
+    //      CAMERA
+    PerspectiveCamera perca(cameraPos, WorldUp, Front, 60.f, height, width);
+
     //enable blending
     glEnable(GL_BLEND);
     //choose the blending function
@@ -742,7 +750,9 @@ int main(void)
 
         
         //set camera to be MOVEABLE i.e. can be influenced
-        glm::mat4 viewMatrix = glm::lookAt(cameraPos, cameraPos + Front, WorldUp);
+        perca.setCameraPos(cameraPos);
+        perca.setFront(Front);
+        glm::mat4 viewMatrix = perca.getViewMat();
 
         //      SKYBOX
         glDepthMask(GL_FALSE);
@@ -768,45 +778,17 @@ int main(void)
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
-        //      MAIN OBJECT
-        //mainObjShader.use();
-
+        //      DRAWING microRecon
+        microRecon.getShader()->use();
         ////camera
-        //mainobjshader.setmat4("projection", projection);
-        //mainobjshader.setmat4("view", viewmatrix);
-
-        ////light
-        //mainobjshader.setvec3("lightpos", lightpos);
-        //mainobjshader.setvec3("lightcolor", lightcolor);
-        //mainobjshader.setint("ambientstr", ambientstr);
-        //mainobjshader.setvec3("ambientcolor", ambientcolor);
-        //mainobjshader.setvec3("camerapos", camerapos);
-        //mainobjshader.setfloat("specstr", specstr);
-        //mainobjshader.setfloat("specphong", specphong);
-        //mainobjshader.setfloat("brightness", brightness);
-
-        //      note for future: put this in a class function
-        microRecon.getShader().use();
-        ////camera
-        microRecon.getShader().setMat4("projection", projection);
-        microRecon.getShader().setMat4("view", viewMatrix);
+        perca.perfromSpecifics(microRecon.getShader());
 
         //light
-        microRecon.getShader().setVec3("lightpos", lightPos);
-        microRecon.getShader().setVec3("lightcolor", lightColor);
-        microRecon.getShader().setInt("ambientstr", ambientStr);
-        microRecon.getShader().setVec3("ambientcolor", ambientColor);
-        microRecon.getShader().setVec3("camerapos", cameraPos);
-        microRecon.getShader().setFloat("specstr", specStr);
-        microRecon.getShader().setFloat("specphong", specPhong);
-        microRecon.getShader().setFloat("brightness", brightness);
+        mainLight.attachFundamentals(microRecon.getShader());
+        microRecon.getShader()->setFloat("brightness", brightness);
 
         //texture
-        //useTexture((microRecon.getShaderID()), texture);
-        glActiveTexture(GL_TEXTURE0);
-        GLuint mainObjtex0Address = glGetUniformLocation(microRecon.getShaderID(), "tex0");
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(mainObjtex0Address, 0);
+        useTexture((microRecon.getShaderID()), texture);
 
         /*glActiveTexture(GL_TEXTURE1);
         GLuint mainObjMaptex0Address = glGetUniformLocation(mainObjShader.getID(), "norm_tex");
@@ -814,10 +796,20 @@ int main(void)
         glUniform1i(mainObjMaptex0Address, 1);*/
 
         microRecon.draw();
-        //microRecon.draw(&microReconShader, &VAO, &fullVertexData);
        
-        /*useTexture(microRecon.getShader(), dualStrikerTexture);
-        dualStriker.draw();*/
+        //      DRAWING dualStriker
+        dualStriker.getShader()->use();
+        ////camera
+        perca.perfromSpecifics(dualStriker.getShader());
+
+        //light
+        mainLight.attachFundamentals(dualStriker.getShader());
+        dualStriker.getShader()->setFloat("brightness", brightness);
+
+        //texture
+        useTexture((dualStriker.getShaderID()), texture);
+
+        dualStriker.draw();
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
