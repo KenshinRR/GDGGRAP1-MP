@@ -64,7 +64,7 @@ void Model3D::draw()
 
     transformation_matrix = glm::rotate(
         transformation_matrix,
-        glm::radians(-90.f),
+        glm::radians(theta_z),
         glm::normalize(glm::vec3(0, 0, 1))
     );
 
@@ -231,6 +231,11 @@ void Model3D::deleteVAO()
 void Model3D::setFullVertexData(std::vector<GLfloat> fullVertexData)
 {
     this->fullVertexData = fullVertexData;
+}
+
+void Model3D::setPosition(glm::vec3 pos)
+{
+    this->position = pos;
 }
 
 Shader* Model3D::getShader()

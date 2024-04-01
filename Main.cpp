@@ -436,8 +436,8 @@ int main(void)
 {
     GLFWwindow* window;
 
-    float height = 800.0f;
-    float width = 800.0f;
+    float height = 1280.f;
+    float width = 1280.f;
 
 
 
@@ -459,29 +459,54 @@ int main(void)
 
     stbi_set_flip_vertically_on_load(true);  
 
-    //      MAIN OBJ TEXTURE
-    GLuint texture = createTexture("3D/MicroRecon.png");
-    GLuint dualStrikerTexture = createTexture("3D/DualStriker.png");
+    //      LOADING THE OBJECTS
+    //textures
+    std::vector<GLuint> vecTextures;
+    std::vector<const char*> texturePaths;
+    texturePaths.push_back("3D/CamoStellarJet.png");
+    texturePaths.push_back("3D/MicroRecon.png");
+    texturePaths.push_back("3D/DualStriker.png");
+    texturePaths.push_back("3D/GalactixRacer.png");
+    texturePaths.push_back("3D/InfraredFurtive.png");
+    texturePaths.push_back("3D/RedFighter.png");
+    texturePaths.push_back("3D/Transtellar.png");
 
-    //loading the .obj file
-    std::vector<GLfloat> fullVertexData = getFullVertexData("3D/MicroRecon.obj");
-    std::vector<GLfloat> dualStrikerFullVertexData = getFullVertexData("3D/DualStriker.obj");
+    for (const char* texturePath : texturePaths) {
+        vecTextures.push_back(createTexture(texturePath));
+    }
+
+    //getting the paths of obj files
+    std::vector<std::string> vecPaths;
+    vecPaths.push_back("3D/CamoStellarJet.obj");
+    vecPaths.push_back("3D/MicroRecon.obj");
+    vecPaths.push_back("3D/DualStriker.obj");
+    vecPaths.push_back("3D/GalactixRacer.obj");
+    vecPaths.push_back("3D/InfraredFurtive.obj");
+    vecPaths.push_back("3D/RedFighter.obj");
+    vecPaths.push_back("3D/Transtellar.obj");
+    int posIndex = 0;
+
+    for (std::string path : vecPaths)
+    {
+        std::vector<GLfloat> fullVertexData = getFullVertexData(path);
+
+        vecModels.push_back(new Model3D(
+            {posIndex, 0, 0},
+            fullVertexData,
+            "Shaders/mainObj.vert", "Shaders/mainObj.frag"
+        ));
+
+        posIndex -= 1.f;
+    }
 
     //      OBJ CREATIONS
-
-    Shader microReconShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
-    Shader dualStrikerShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
-    //vecModels.push_back(new Model3D({ 0,0,0 })); //create model object
-    Model3D microRecon({ 0,0,0 },
-        fullVertexData,
-        "Shaders/mainObj.vert", "Shaders/mainObj.frag");
-    Model3D dualStriker({ -0.5,0,0 },
-        dualStrikerFullVertexData,
-        "Shaders/mainObj.vert", "Shaders/mainObj.frag");
+    Shader voxelShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
 
     //      OBJECTS VAO
-    microRecon.initVAO();
-    dualStriker.initVAO();
+    for (Model3D* model : vecModels)
+    {
+        model->initVAO();
+    }
 
     //      NORMAL MAP TEXTURE
     //Gluin norm_tex = createNormTexture("");
@@ -540,7 +565,7 @@ int main(void)
 
     glEnable(GL_DEPTH_TEST);
 
-    glViewport(0, 0, 800, 800);
+    glViewport(0, 0, width, height);
 
     glfwSetKeyCallback(window, Key_Callback);
 
@@ -583,87 +608,6 @@ int main(void)
         3,7,6,
         6,2,3
     };
-
-    //obj VAO, VBO
-    GLuint dualStrikerVAO = createVAOandVBO(dualStrikerFullVertexData)[0];
-    GLuint dualStrikerVBO = createVAOandVBO(dualStrikerFullVertexData)[1];
-
-    GLuint VAO, VBO;
-
-    glGenVertexArrays(1, &VAO);
-    glGenBuffers(1, &VBO);
-
-    glBindVertexArray(VAO);
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    glBufferData(
-        GL_ARRAY_BUFFER,
-        //
-        sizeof(GLfloat) * fullVertexData.size(),
-        fullVertexData.data(),
-        GL_DYNAMIC_DRAW
-    );
-
-    glVertexAttribPointer(
-        0,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)0
-
-    );
-    glEnableVertexAttribArray(0);
-
-    GLintptr litPtr = 3 * sizeof(float);
-    glVertexAttribPointer(
-        1,
-        3,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)litPtr
-
-    );
-    glEnableVertexAttribArray(1);
-
-    GLintptr uvPtr = 6 * sizeof(float);
-    glVertexAttribPointer(
-        2,
-        2,
-        GL_FLOAT,
-        GL_FALSE,
-
-        14 * sizeof(float),
-        (void*)uvPtr
-    );
-    glEnableVertexAttribArray(2);
-
-    //tangent point
-    GLintptr tangentPtr = 8 * sizeof(float);
-    glVertexAttribPointer(
-        3, //3 == tangent
-        3, //T (XYZ)
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(float),
-        (void*)tangentPtr
-    );
-    glEnableVertexAttribArray(3);
-
-    //bitangent 
-    GLintptr bitangentPtr = 11 * sizeof(float);
-    glVertexAttribPointer(
-        4, //4 == bitangent
-        3, //B(XYZ)
-        GL_FLOAT,
-        GL_FALSE,
-        14 * sizeof(float),
-        (void*)bitangentPtr
-    );
-    glEnableVertexAttribArray(4);
 
     //skybox
     unsigned int skyboxVAO, skyboxVBO, skyboxEBO;
@@ -778,38 +722,22 @@ int main(void)
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
-        //      DRAWING microRecon
-        microRecon.getShader()->use();
-        ////camera
-        perca.perfromSpecifics(microRecon.getShader());
+        int textureIndex = 0;
+        //      DRAWING THE OBJECTS
+        for (Model3D* model : vecModels)
+        {
+            model->getShader()->use();
+            //camera
+            perca.perfromSpecifics(model->getShader());
+            //light
+            mainLight.attachFundamentals(model->getShader());
+            model->getShader()->setFloat("brightness", brightness);
+            //texture
+            useTexture(model->getShaderID(), vecTextures[textureIndex]);
+            model->draw();
 
-        //light
-        mainLight.attachFundamentals(microRecon.getShader());
-        microRecon.getShader()->setFloat("brightness", brightness);
-
-        //texture
-        useTexture((microRecon.getShaderID()), texture);
-
-        /*glActiveTexture(GL_TEXTURE1);
-        GLuint mainObjMaptex0Address = glGetUniformLocation(mainObjShader.getID(), "norm_tex");
-        glBindTexture(GL_TEXTURE_2D, norm_tex);
-        glUniform1i(mainObjMaptex0Address, 1);*/
-
-        microRecon.draw();
-       
-        //      DRAWING dualStriker
-        dualStriker.getShader()->use();
-        ////camera
-        perca.perfromSpecifics(dualStriker.getShader());
-
-        //light
-        mainLight.attachFundamentals(dualStriker.getShader());
-        dualStriker.getShader()->setFloat("brightness", brightness);
-
-        //texture
-        useTexture((dualStriker.getShaderID()), texture);
-
-        dualStriker.draw();
+            textureIndex++;
+        }
 
         /* Swap front and back buffers */
         glfwSwapBuffers(window);
@@ -820,11 +748,14 @@ int main(void)
 
     }
     
-    glDeleteVertexArrays(1, &VAO);
-    glDeleteBuffers(1, &VBO);
 
-    dualStriker.deleteVAO();
-    microRecon.deleteVAO();
+    /*dualStriker.deleteVAO();
+    microRecon.deleteVAO();*/
+
+    for (Model3D* model : vecModels)
+    {
+        model->deleteVAO();
+    }
 
    /* glDeleteBuffers(1, &EBO);*/
     glfwTerminate();

@@ -49,6 +49,7 @@ public:
 
 public:
 	void setFullVertexData(std::vector<GLfloat> fullVertexData);
+	void setPosition(glm::vec3 pos);
 
 public:
 	Shader* getShader();
