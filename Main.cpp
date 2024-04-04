@@ -168,11 +168,11 @@ void Key_Callback(GLFWwindow* window,
             }
         }
         if (glfwGetKey(window, GLFW_KEY_Q)) {
-
-            glm::vec3 pos = P1->getPosition() + glm::vec3{ 0,1,0 };
-            P1->setPosition(pos);
-            cameraPos += glm::vec3{ 0.f, 1.f, 0.f };
-
+            if (P1->getPosition().y != 0) {
+                glm::vec3 pos = P1->getPosition() + glm::vec3{ 0,1,0 };
+                P1->setPosition(pos);
+                cameraPos += glm::vec3{ 0.f, 1.f, 0.f };
+            }
             glm::vec3 direction;
 
             if (stateCam == 0) {
@@ -184,11 +184,11 @@ void Key_Callback(GLFWwindow* window,
 
         }
         if (glfwGetKey(window, GLFW_KEY_E)) {
-            if (P1->getPosition().y != 0) {
+            
                 glm::vec3 pos = P1->getPosition() - glm::vec3{ 0,1,0 };
                 P1->setPosition(pos);
                 cameraPos -= glm::vec3{ 0.f, 1.f, 0.f };
-            }
+            
             
 
             glm::vec3 direction;
