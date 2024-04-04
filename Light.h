@@ -30,4 +30,10 @@ public:
 public:
 	void attachFundamentals(Shader* shaderProg);
 	virtual void attachSpecifics(Shader* shaderProg);
+
+public:
+	void setPosition(glm::vec3 position);
+
+public:
+	glm::vec3 getPosition();
 };

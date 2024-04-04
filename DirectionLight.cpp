@@ -7,43 +7,10 @@ Light(lightPos, lightColor, ambientStr, specStr, specPhong)
     this->brightness = brightness;
 }
 
-//this binds or sends the values to the shader program, this might not be needed as it is old code
-void DirectionLight::perform(GLuint* shaderProg)
-{
-    GLuint  lightLoc = glGetUniformLocation(*shaderProg, "lightPos");
-    glUniform3fv(lightLoc,
-        1,
-        glm::value_ptr(lightPos));
-
-    GLuint lightColorLoc = glGetUniformLocation(*shaderProg, "lightColor");
-    glUniform3fv(lightColorLoc,
-        1,
-        glm::value_ptr(lightColor));
-
-    GLuint ambientStrLoc = glGetUniformLocation(*shaderProg, "ambientStr");
-    glUniform1f(ambientStrLoc, ambientStr);
-
-    GLuint ambientColorLoc = glGetUniformLocation(*shaderProg, "ambientColor");
-
-    glUniform3fv(ambientColorLoc,
-        1,
-        glm::value_ptr(ambientColor));
-
-    GLuint specStrLoc = glGetUniformLocation(*shaderProg, "specStr");
-    glUniform1f(specStrLoc, specStr);
-
-    GLuint specPhongLoc = glGetUniformLocation(*shaderProg, "specPhong");
-    glUniform1f(specPhongLoc, specPhong);
-
-    GLuint directionLoc = glGetUniformLocation(*shaderProg, "direction");
-    glUniform3fv(directionLoc,
-        1,
-        glm::value_ptr(direction));
-}
-
 //attach the specific values needed for direction light
 void DirectionLight::attachSpecifics(Shader* shaderProg)
 {
+    this->attachFundamentals(shaderProg);
     shaderProg->setVec3("direction", direction);
     shaderProg->setFloat("dl_brightness", this->brightness);
 }

@@ -11,10 +11,16 @@
 #include <vector>
 
 #include "Model3D.h"
+
 #include "Shader.h"
+
 #include "Light.h"
+#include "PointLight.h"
+#include "DirectionLight.h"
+
 #include "PerspectiveCamera.h"
 #include "OrthoCamera.h"
+
 #include "Player.h"
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -61,7 +67,7 @@ float lastX = 400, lastY = 400;
 std::vector<Model3D*> vecModels;
 
 //Point light variables
-float brightness = 5.0f;
+float brightness = 0.5f;
 
 //screen
 float height = 1280.f;
@@ -210,14 +216,7 @@ void Key_Callback(GLFWwindow* window,
                 cameraPos = direction + P1->getPosition();
             }
 
-
-
-
-
         }
-
-
-
 
         if (glfwGetKey(window, GLFW_KEY_D)) {
             P1->rotate('y', '-');
@@ -236,8 +235,11 @@ void Key_Callback(GLFWwindow* window,
                
             }
 
+        }
 
-
+        if (glfwGetKey(window, GLFW_KEY_F)) {
+            brightness += 0.5f;
+            if (brightness > 1.5f) brightness = 0.5f;
         }
     }
     if (stateCam == 2) {
@@ -690,7 +692,13 @@ int main(void)
         posIndex -= 1.f;
     }
 
-   
+    //setting the positions of the models
+    vecModels[0]->setPosition({ 0,0,-5 });
+    vecModels[1]->setPosition({ -5,-5,-10 });
+    vecModels[2]->setPosition({ -8,-5,-10 });
+    vecModels[3]->setPosition({ 5,-10,-15 });
+    vecModels[4]->setPosition({ -3,-15,-20 });
+    vecModels[5]->setPosition({ 8,0,-20 });
 
 
     //      OBJ CREATIONS
@@ -869,8 +877,8 @@ int main(void)
 
     //      LIGHT
     Light mainLight(lightPos, lightColor, ambientStr, specStr, specPhong);
-
-    
+    PointLight pointLight(P1->getPosition() + Front, lightColor, ambientStr, ambientColor, specStr, specPhong, brightness);
+    DirectionLight dirLight(lightPos, lightColor, ambientStr, ambientColor, specStr, specPhong, -WorldUp, 1.f);
     
 
 
@@ -947,6 +955,10 @@ int main(void)
         glDepthMask(GL_TRUE);
         glDepthFunc(GL_LESS);
 
+        //updating the point light position
+        pointLight.setPosition(P1->getPosition() + Front);
+        pointLight.setBrightness(brightness);
+
         int textureIndex = 0;
         //      DRAWING THE OBJECTS
         for (Model3D* model : vecModels)
@@ -967,8 +979,9 @@ int main(void)
            
             
             //light
-            mainLight.attachFundamentals(model->getShader());
-            model->getShader()->setFloat("brightness", brightness);
+            dirLight.attachSpecifics(model->getShader());
+            pointLight.attachSpecifics(model->getShader());
+
             //texture
             useTexture(model->getShaderID(), vecTextures[textureIndex]);
             model->draw();
@@ -978,6 +991,7 @@ int main(void)
 
        
             main_object->getShader()->use();
+
             switch (stateCam) {
             case 0:
                 Unerca.perfromSpecifics(main_object->getShader());
@@ -991,11 +1005,9 @@ int main(void)
                 
             }
 
-            
-
-            mainLight.attachFundamentals(main_object->getShader());
-
-            main_object->getShader()->setFloat("brightness", brightness);
+            //light
+            dirLight.attachSpecifics(main_object->getShader());
+            pointLight.attachSpecifics(main_object->getShader());
 
             useTexture(main_object->getShaderID(), mainObjTex);
             main_object->draw();

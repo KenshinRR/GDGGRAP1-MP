@@ -25,10 +25,9 @@ public:
 	);
 
 public:
-	void perform(GLuint* shaderProg);
 	void attachSpecifics(Shader* shaderProg);
 
 public:
-	void setPosition(glm::vec3 position);
 	void setBrightness(float brightness);
+
 };

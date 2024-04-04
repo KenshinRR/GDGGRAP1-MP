@@ -27,7 +27,6 @@ public:
 	);
 
 public:
-	void perform(GLuint* shaderProg);
 	void attachSpecifics(Shader* shaderProg);
 	void setBrightness(float brightness);
 };

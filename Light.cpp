@@ -32,3 +32,13 @@ void Light::attachFundamentals(Shader* shaderProg)
 void Light::attachSpecifics(Shader* shaderProg)
 {
 }
+
+void Light::setPosition(glm::vec3 position)
+{
+    this->lightPos = position;
+}
+
+glm::vec3 Light::getPosition()
+{
+    return this->lightPos;
+}
