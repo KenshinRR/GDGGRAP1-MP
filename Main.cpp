@@ -15,6 +15,7 @@
 #include "Light.h"
 #include "PerspectiveCamera.h"
 #include "OrthoCamera.h"
+#include "Player.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -44,7 +45,7 @@ float coolDown = 0.0f;
 //initialize camera vars
 glm::vec3 cameraPos = glm::vec3(0, 4, -8.f);
 glm::vec3 rdCamPos = glm::vec3(0.f, 0.f, 0.f);
-glm::vec3 brCamPos = glm::vec3(0.f, 20.f, 0.f);
+glm::vec3 brCamPos = glm::vec3(0.f, 10.f, 0.f);
 glm::vec3 WorldUp = glm::vec3(0, 1.0f, 0);
 glm::vec3 Front = glm::vec3(0, 0.0f, -1.0);
 //initialize for mouse movement
@@ -66,12 +67,12 @@ float brightness = 5.0f;
 float height = 1280.f;
 float width = 1280.f;
 
-Model3D* Player;
+Player* P1;
 //      CAMERA
 PerspectiveCamera perca(cameraPos, WorldUp, Front, 60.f, height, width, 100,false);//test view
 PerspectiveCamera Therca({ 0,15,28 }, WorldUp, Front, 60.f, height, width, 50,true);//Third person view
 PerspectiveCamera Unerca({ 0,0,0 }, WorldUp, Front, 60.f, height, width, 100,false);//First person view
-OrthoCamera Berca({ 0,20.f,0 }, WorldUp, {0,-1,0}, 60.f, height, width, 1000, true); //bird view
+OrthoCamera Berca({ 0,10.f,0 }, WorldUp, {0,-1,0}, 60.f, height, width, 1000, true); //bird view
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
@@ -107,10 +108,10 @@ void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 
         //setting front and the change
         glm::vec3 direction;
-        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)) * 20;
-        direction.y = sin(glm::radians(pitch)) * 20;
-        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)) * 20;
-        rdCamPos = Player->getPosition() + direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)) * 2;
+        direction.y = sin(glm::radians(pitch)) * 2;
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)) * 2;
+        rdCamPos = P1->getPosition() + direction;
 
 
         
@@ -129,82 +130,84 @@ void Key_Callback(GLFWwindow* window,
     if (stateCam != 2) {
         if (glfwGetKey(window, GLFW_KEY_W)) {
 
-            glm::vec3 pos = Player->getPosition();
-            Player->setPosition(pos + Front);
+            glm::vec3 pos = P1->getPosition();
+            P1->setPosition(pos + Front);
             cameraPos += Front;
+            rdCamPos += Front;
 
             glm::vec3 direction;
 
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
             }
         }
 
         if (glfwGetKey(window, GLFW_KEY_S)) {
 
-            glm::vec3 pos = Player->getPosition();
-            Player->setPosition(pos - Front);
+            glm::vec3 pos = P1->getPosition();
+            P1->setPosition(pos - Front);
             cameraPos -= Front;
+            rdCamPos -= Front;
 
             glm::vec3 direction;
 
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
             }
         }
         if (glfwGetKey(window, GLFW_KEY_Q)) {
 
-            glm::vec3 pos = Player->getPosition() + glm::vec3{ 0,1,0 };
-            Player->setPosition(pos);
+            glm::vec3 pos = P1->getPosition() + glm::vec3{ 0,1,0 };
+            P1->setPosition(pos);
             cameraPos += glm::vec3{ 0.f, 1.f, 0.f };
 
             glm::vec3 direction;
 
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
             }
 
         }
         if (glfwGetKey(window, GLFW_KEY_E)) {
-            glm::vec3 pos = Player->getPosition() - glm::vec3{ 0,1,0 };
-            Player->setPosition(pos);
+            glm::vec3 pos = P1->getPosition() - glm::vec3{ 0,1,0 };
+            P1->setPosition(pos);
             cameraPos -= glm::vec3{ 0.f, 1.f, 0.f };
 
             glm::vec3 direction;
 
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
             }
 
         }
         if (glfwGetKey(window, GLFW_KEY_A)) {
-            Player->rotate('y', '+');
+            P1->rotate('y', '+');
             glm::vec3 direction;
 
 
 
-            direction.x = cos(glm::radians(Player->getYrot() - 90));//
+            direction.x = cos(glm::radians(P1->getYrot() - 90));//
             direction.y = 0;
-            direction.z = -sin(glm::radians(Player->getYrot() - 90));
+            direction.z = -sin(glm::radians(P1->getYrot() - 90));
             Front = glm::normalize(direction);
 
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
             }
 
 
@@ -217,19 +220,20 @@ void Key_Callback(GLFWwindow* window,
 
 
         if (glfwGetKey(window, GLFW_KEY_D)) {
-            Player->rotate('y', '-');
+            P1->rotate('y', '-');
 
             glm::vec3 direction;
 
-            direction.x = cos(glm::radians(Player->getYrot() - 90));
+            direction.x = cos(glm::radians(P1->getYrot() - 90));
             direction.y = 0;
-            direction.z = -sin(glm::radians(Player->getYrot() - 90));
+            direction.z = -sin(glm::radians(P1->getYrot() - 90));
             Front = glm::normalize(direction);
             if (stateCam == 0) {
-                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
-                direction.y = 4;
-                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
-                cameraPos = direction + Player->getPosition();
+                direction.x = cos(glm::radians(P1->getYrot() - 90)) * 0.8;//
+                direction.y = 0.4;
+                direction.z = -sin(glm::radians(P1->getYrot() - 90)) * 0.8;
+                cameraPos = direction + P1->getPosition();
+               
             }
 
 
@@ -238,11 +242,19 @@ void Key_Callback(GLFWwindow* window,
     }
     if (stateCam == 2) {
         if (glfwGetKey(window, GLFW_KEY_LEFT)) {
-            brCamPos -= glm::vec3{ 0,0,1 };
+            brCamPos -= glm::vec3{ 1,0,0 };
             std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
         }
         if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            brCamPos += glm::vec3{ 1,0,0 };
+            std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_UP)) {
             brCamPos += glm::vec3{ 0,0,1 };
+            std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_DOWN)) {
+            brCamPos -= glm::vec3{ 0,0,1 };
             std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
         }
     }
@@ -261,7 +273,8 @@ void Key_Callback(GLFWwindow* window,
 
     if (glfwGetKey(window, GLFW_KEY_2)) {
         stateCam = 2;
-        brCamPos = glm::vec3{ cameraPos.x, cameraPos.y + 10, cameraPos.z };
+        brCamPos = glm::vec3{ P1->getPosition().x, P1->getPosition().y + 2, P1->getPosition().z};
+        Berca.setFront({ P1->getPosition().x, P1->getPosition().y - 1, P1->getPosition().z });
     }
        
  
@@ -671,7 +684,7 @@ int main(void)
             //{posIndex, 0, 0},
             {posIndex,0,-10},
             fullVertexData,
-            "Shaders/mainObj.vert", "Shaders/mainObj.frag"
+            "Shaders/mainObj.vert", "Shaders/mainObj.frag", 0.0f
         ));
 
         posIndex -= 1.f;
@@ -682,12 +695,12 @@ int main(void)
 
     //      OBJ CREATIONS
     Shader voxelShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
-    Model3D* main_object = new Model3D({ 0,0,0 },
+    Player* main_object = new Player({ 0,0,0 },
         getFullVertexData("3D/miniSub02.obj"),
-        "Shaders/mainObj.vert", "Shaders/mainObj.frag" 
+        "Shaders/mainObj.vert", "Shaders/mainObj.frag" , 180.f
     );
     
-    Player = main_object;
+    P1 = main_object;
 
     //      OBJECTS VAO
     for (Model3D* model : vecModels)
@@ -894,14 +907,18 @@ int main(void)
         case 1:
             
             
-            Therca.setFront(Player->getPosition());
+            Therca.setFront(P1->getPosition());
             Therca.setCameraPos(rdCamPos);
             viewMatrix = Therca.getViewMat();
             break;
         case 2:
-            Berca.setFront({0.f,-1.f,0.f});
+            
             Berca.setCameraPos(brCamPos);
+            
+            Berca.setFront({ brCamPos.x,  brCamPos.y -1, brCamPos.z + 0.01 });
+            
             viewMatrix = Berca.getViewMat();
+           
             break;
         }
         

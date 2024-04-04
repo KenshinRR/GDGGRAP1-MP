@@ -8,7 +8,7 @@ Model3D::Model3D(glm::vec3 position,
 	this->rotation = { 0,0,0 };
 	this->scale = { 0.1f,0.1f,0.1f };
     theta_x = 0.f;
-    theta_y = 270.f;
+    theta_y = 0.f; 
     theta_z = 0.f;
 
     /* Initialize the identity matrix */
@@ -19,13 +19,13 @@ Model3D::Model3D(glm::vec3 position,
 
 Model3D::Model3D(glm::vec3 position,
     std::vector<GLfloat> fullVertexData,
-    const char* vertexPath, const char* fragmentPath)
+    const char* vertexPath, const char* fragmentPath,float rot)
 {
     this->position = position;
     this->rotation = { 0,0,0 };
     this->scale = { 0.1f,0.1f,0.1f };
     theta_x = 0.f;
-    theta_y = 180.f;
+    theta_y = rot;
     theta_z = 0.f;
 
     /* Initialize the identity matrix */

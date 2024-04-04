@@ -14,7 +14,7 @@
 #include "Shader.h"
 
 class Model3D {
-private:
+protected:
 	glm::vec3 position;
 	glm::vec3 rotation;
 	glm::vec3 scale;
@@ -35,11 +35,11 @@ public:
 	Model3D(glm::vec3 position,
 		std::vector<GLfloat> fullVertexData,
 		const char* vertexPath, 
-		const char* fragmentPath);
+		const char* fragmentPath, float rot);
 
 public:
 	void draw();
-	void draw(Shader* shaderProgB, GLuint* VAOB, std::vector<GLfloat>* fullVertexDataB);
+	virtual void draw(Shader* shaderProgB, GLuint* VAOB, std::vector<GLfloat>* fullVertexDataB);
 
 	void rotate(char axis,char direction);
 

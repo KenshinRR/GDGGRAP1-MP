@@ -148,6 +148,7 @@
     <ClCompile Include="Model3D.cpp" />
     <ClCompile Include="OrthoCamera.cpp" />
     <ClCompile Include="PerspectiveCamera.cpp" />
+    <ClCompile Include="Player.cpp" />
     <ClCompile Include="PointLight.cpp" />
     <ClCompile Include="Shader.cpp" />
   </ItemGroup>
@@ -158,6 +159,7 @@
     <ClInclude Include="Model3D.h" />
     <ClInclude Include="OrthoCamera.h" />
     <ClInclude Include="PerspectiveCamera.h" />
+    <ClInclude Include="Player.h" />
     <ClInclude Include="PointLight.h" />
     <ClInclude Include="Shader.h" />
     <ClInclude Include="stb_image.h" />
