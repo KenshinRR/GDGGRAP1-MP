@@ -33,11 +33,19 @@ in vec3 fragPos;
 vec3 CalcDirLight(vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(vec3 normal, vec3 viewDir);
 
+uniform sampler2D norm_tex;
+
+
 void main()
 {
 	vec3 result;
 
-	vec3 norm = normalize(normCoord);
+	//vec3 norm = normalize(normCoord);	
+	vec3 norm = texture(norm_tex, texCoord).rgb;
+
+	//convert normal
+	norm = normalize(norm*2.0 - 1.0);
+
 	vec3 viewDir = normalize(cameraPos - fragPos);
 
 	//directional light
