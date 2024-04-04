@@ -870,7 +870,6 @@ int main(void)
     );
 
     //      LIGHT VARIABLES
-    glm::vec3 lightPos = glm::vec3(0, 0, 10);
 
     glm::vec3 lightColor = glm::vec3(1,1,1);
 
@@ -883,9 +882,8 @@ int main(void)
     float specPhong = 16;
 
     //      LIGHT
-    Light mainLight(lightPos, lightColor, ambientStr, specStr, specPhong);
     PointLight pointLight(P1->getPosition() + Front, lightColor, ambientStr, ambientColor, specStr, specPhong, brightness);
-    DirectionLight dirLight(lightPos, lightColor, ambientStr, ambientColor, specStr, specPhong, -WorldUp, 1.f);
+    DirectionLight dirLight(P1->getPosition(), lightColor, ambientStr, ambientColor, specStr, specPhong, -WorldUp, 1.f);
     
 
 

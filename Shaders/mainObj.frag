@@ -30,6 +30,8 @@ in vec3 normCoord;
 
 in vec3 fragPos;
 
+in mat3 TBN;
+
 vec3 CalcDirLight(vec3 normal, vec3 viewDir);
 vec3 CalcPointLight(vec3 normal, vec3 viewDir);
 
@@ -45,6 +47,7 @@ void main()
 
 	//convert normal
 	norm = normalize(norm*2.0 - 1.0);
+	norm = normalize(TBN * norm);
 
 	vec3 viewDir = normalize(cameraPos - fragPos);
 
