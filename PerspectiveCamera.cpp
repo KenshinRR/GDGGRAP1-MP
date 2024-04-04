@@ -3,14 +3,14 @@
 
 PerspectiveCamera::PerspectiveCamera(
     glm::vec3 pos, glm::vec3 WorldUp, glm::vec3 Front,
-    float fov, float height, float width) :
-    Camera(pos, WorldUp, Front) {
+    float fov, float height, float width, float zfar, bool Dstate) :
+    Camera(pos, WorldUp, Front,Dstate) {
     //initialize the perspective camera
     this->projection = glm::perspective(
         glm::radians(fov),//FOV
         height / width, //aspect ratio
         0.1f, //znear > 0
-        1000.f //zfar
+        zfar //zfar
     );
 }
 

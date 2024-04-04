@@ -1,6 +1,6 @@
 #include "Camera.h"
 
-Camera::Camera(glm::vec3 pos, glm::vec3 WorldUp, glm::vec3 Front){
+Camera::Camera(glm::vec3 pos, glm::vec3 WorldUp, glm::vec3 Front,bool Dstate){
 
     //camera
     
@@ -8,8 +8,9 @@ Camera::Camera(glm::vec3 pos, glm::vec3 WorldUp, glm::vec3 Front){
     this->cameraPos = pos;
     this->WorldUp = WorldUp;
     this->Front = Front;
+    this->DState = Dstate;
 
-    this->viewMatrix = glm::lookAt(pos, pos + Front, WorldUp);
+    this->viewMatrix = glm::lookAt(pos, Front, WorldUp);
 }
 
 void Camera::performFundamentals(Shader* shaderProg)
@@ -35,8 +36,20 @@ glm::vec3 Camera::getWorldUp() {
 }
 	
 glm::mat4 Camera::getViewMat() {
-    this->viewMatrix = glm::lookAt(this->cameraPos, this->cameraPos + this->Front, this->WorldUp); //update viewMatrix
+    // camPos + front for 1st person, 3rd person is just front btw this is target
+    if (DState) {
+        this->viewMatrix = glm::lookAt(this->cameraPos, this->Front, this->WorldUp); //update viewMatrix
+    }
+    else {
+        this->viewMatrix = glm::lookAt(this->cameraPos, this->cameraPos + this->Front, this->WorldUp); //update viewMatrix
+    }
+    
     return this->viewMatrix;
+}
+
+
+void Camera::setViewMatrix() {
+    this->viewMatrix = glm::lookAt(this->cameraPos, this->cameraPos + this->Front, this->WorldUp);
 }
 
 glm::vec3 Camera::getCameraPos() {

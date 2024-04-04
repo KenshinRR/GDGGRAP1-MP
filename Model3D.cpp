@@ -8,7 +8,7 @@ Model3D::Model3D(glm::vec3 position,
 	this->rotation = { 0,0,0 };
 	this->scale = { 0.1f,0.1f,0.1f };
     theta_x = 0.f;
-    theta_y = 0.f;
+    theta_y = 270.f;
     theta_z = 0.f;
 
     /* Initialize the identity matrix */
@@ -25,7 +25,7 @@ Model3D::Model3D(glm::vec3 position,
     this->rotation = { 0,0,0 };
     this->scale = { 0.1f,0.1f,0.1f };
     theta_x = 0.f;
-    theta_y = 0.f;
+    theta_y = 180.f;
     theta_z = 0.f;
 
     /* Initialize the identity matrix */
@@ -126,19 +126,18 @@ void Model3D::draw(Shader* shaderProgB, GLuint* VAOB, std::vector<GLfloat>* full
     glDrawArrays(GL_TRIANGLES, 0, fullVertexDataB->size() / 14);
 }
 
-void Model3D::rotate(char axis, float theta)
+void Model3D::rotate(char axis, char direction)
 {
-    switch (axis)
+    switch (direction)
     {
-    case 'x':
-        this->theta_x = theta;
+    
+    case '+':
+        this->theta_y += 7.5;
         break;
-    case 'y':
-        this->theta_y = theta;
+    case '-':
+        this->theta_y -= 7.5;
         break;
-    case 'z':
-        this->theta_z = theta;
-        break;
+    
     default:
         break;
     }
@@ -247,4 +246,15 @@ unsigned int Model3D::getShaderID()
 {
     return this->shaderProg->getID();
 }
+
+float Model3D::getYrot()
+{
+    return this->theta_y;
+}
+
+glm::vec3 Model3D::getPosition()
+{
+    return this->position;
+}
+
 

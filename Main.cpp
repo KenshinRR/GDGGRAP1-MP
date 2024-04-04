@@ -14,6 +14,7 @@
 #include "Shader.h"
 #include "Light.h"
 #include "PerspectiveCamera.h"
+#include "OrthoCamera.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -41,14 +42,17 @@ float lastFrame = 0.0f;
 float coolDown = 0.0f;
 
 //initialize camera vars
-glm::vec3 cameraPos = glm::vec3(0, 0, 2.f);
+glm::vec3 cameraPos = glm::vec3(0, 4, -8.f);
+glm::vec3 rdCamPos = glm::vec3(0.f, 0.f, 0.f);
+glm::vec3 brCamPos = glm::vec3(0.f, 20.f, 0.f);
 glm::vec3 WorldUp = glm::vec3(0, 1.0f, 0);
-glm::vec3 Front = glm::vec3(0, 0.0f, -1);
+glm::vec3 Front = glm::vec3(0, 0.0f, -1.0);
 //initialize for mouse movement
 bool firstMouse = true;
 float pitch = 0.0f;
 float yaw = -90.0f;
 
+int stateCam = 0;
 //for initial mouse movement
 float lastX = 400, lastY = 400;
 
@@ -58,43 +62,60 @@ std::vector<Model3D*> vecModels;
 //Point light variables
 float brightness = 5.0f;
 
+//screen
+float height = 1280.f;
+float width = 1280.f;
+
+Model3D* Player;
+//      CAMERA
+PerspectiveCamera perca(cameraPos, WorldUp, Front, 60.f, height, width, 100,false);//test view
+PerspectiveCamera Therca({ 0,15,28 }, WorldUp, Front, 60.f, height, width, 50,true);//Third person view
+PerspectiveCamera Unerca({ 0,0,0 }, WorldUp, Front, 60.f, height, width, 100,false);//First person view
+OrthoCamera Berca({ 0,20.f,0 }, WorldUp, {0,-1,0}, 60.f, height, width, 1000, true); //bird view
+
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
-{   
-    float xpos = static_cast<float>(xposIn);
-    float ypos = static_cast<float>(yposIn);
-    if (firstMouse) // for first mouse move
-    {
+{
+    if (stateCam == 1) {
+        float xpos = static_cast<float>(xposIn);
+        float ypos = static_cast<float>(yposIn);
+        if (firstMouse) // for first mouse move
+        {
+            lastX = xpos;
+            lastY = ypos;
+            firstMouse = false;
+        }
+        // calculate offsets to add influence front
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; //reversed
         lastX = xpos;
         lastY = ypos;
-        firstMouse = false;
+
+        //set how STRONG the movement is
+        const float sensitivity = 0.1f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        //for front calculation
+        yaw += xoffset;
+        pitch += yoffset;
+
+        //making sure that you can't 360 via neck breaking
+        if (pitch > 89.0f)
+            pitch = 89.0f;
+        if (pitch < -89.0f)
+            pitch = -89.0f;
+
+        //setting front and the change
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)) * 20;
+        direction.y = sin(glm::radians(pitch)) * 20;
+        direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)) * 20;
+        rdCamPos = Player->getPosition() + direction;
+
+
+        
     }
-    // calculate offsets to add influence front
-    float xoffset = xpos - lastX;
-    float yoffset = lastY - ypos; //reversed
-    lastX = xpos;
-    lastY = ypos;
-
-    //set how STRONG the movement is
-    const float sensitivity = 0.1f;
-    xoffset *= sensitivity;
-    yoffset *= sensitivity;
-
-    //for front calculation
-    yaw += xoffset;
-    pitch += yoffset;
-
-    //making sure that you can't 360 via neck breaking
-    if (pitch > 89.0f)
-        pitch = 89.0f;
-    if (pitch < -89.0f)
-        pitch = -89.0f;
-
-    //setting front and the change
-    glm::vec3 direction;
-    direction.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)); 
-    direction.y = sin(glm::radians(pitch));
-    direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
-    Front = glm::normalize(direction);
+    
 }
 
 void Key_Callback(GLFWwindow* window,
@@ -102,26 +123,149 @@ void Key_Callback(GLFWwindow* window,
     int scancode,
     int action,
     int mods) {
-
+    
     float cameraSpeed = 400.0f * deltaTime;// set Strength of movement
     //simple keypresses trigger the corresponding calculation
-    if (glfwGetKey(window, GLFW_KEY_W) )
-        cameraPos += cameraSpeed * Front; 
-    if (glfwGetKey(window, GLFW_KEY_S))
-        cameraPos -= cameraSpeed * Front;
-    if (glfwGetKey(window, GLFW_KEY_A))
-        cameraPos -= glm::normalize(glm::cross(Front, WorldUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_D))
-        cameraPos += glm::normalize(glm::cross(Front, WorldUp)) * cameraSpeed;
-    if (glfwGetKey(window, GLFW_KEY_SPACE)) {
-        
-        glm::vec3 offset = { 0.5,0.5,0.5 };//don't make it spawn on you code
-        //cooldown check and reset
-        if (coolDown <= 0) {
-            //vecModels.push_back(new Model3D(cameraPos + Front * offset));
-            coolDown = 0;
+    if (stateCam != 2) {
+        if (glfwGetKey(window, GLFW_KEY_W)) {
+
+            glm::vec3 pos = Player->getPosition();
+            Player->setPosition(pos + Front);
+            cameraPos += Front;
+
+            glm::vec3 direction;
+
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+        }
+
+        if (glfwGetKey(window, GLFW_KEY_S)) {
+
+            glm::vec3 pos = Player->getPosition();
+            Player->setPosition(pos - Front);
+            cameraPos -= Front;
+
+            glm::vec3 direction;
+
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+        }
+        if (glfwGetKey(window, GLFW_KEY_Q)) {
+
+            glm::vec3 pos = Player->getPosition() + glm::vec3{ 0,1,0 };
+            Player->setPosition(pos);
+            cameraPos += glm::vec3{ 0.f, 1.f, 0.f };
+
+            glm::vec3 direction;
+
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_E)) {
+            glm::vec3 pos = Player->getPosition() - glm::vec3{ 0,1,0 };
+            Player->setPosition(pos);
+            cameraPos -= glm::vec3{ 0.f, 1.f, 0.f };
+
+            glm::vec3 direction;
+
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+
+        }
+        if (glfwGetKey(window, GLFW_KEY_A)) {
+            Player->rotate('y', '+');
+            glm::vec3 direction;
+
+
+
+            direction.x = cos(glm::radians(Player->getYrot() - 90));//
+            direction.y = 0;
+            direction.z = -sin(glm::radians(Player->getYrot() - 90));
+            Front = glm::normalize(direction);
+
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+
+
+
+
+
+        }
+
+
+
+
+        if (glfwGetKey(window, GLFW_KEY_D)) {
+            Player->rotate('y', '-');
+
+            glm::vec3 direction;
+
+            direction.x = cos(glm::radians(Player->getYrot() - 90));
+            direction.y = 0;
+            direction.z = -sin(glm::radians(Player->getYrot() - 90));
+            Front = glm::normalize(direction);
+            if (stateCam == 0) {
+                direction.x = cos(glm::radians(Player->getYrot() - 90)) * 8;//
+                direction.y = 4;
+                direction.z = -sin(glm::radians(Player->getYrot() - 90)) * 8;
+                cameraPos = direction + Player->getPosition();
+            }
+
+
+
         }
     }
+    if (stateCam == 2) {
+        if (glfwGetKey(window, GLFW_KEY_LEFT)) {
+            brCamPos -= glm::vec3{ 0,0,1 };
+            std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
+        }
+        if (glfwGetKey(window, GLFW_KEY_RIGHT)) {
+            brCamPos += glm::vec3{ 0,0,1 };
+            std::cout << brCamPos.x << " " << brCamPos.y << " " << brCamPos.z << std::endl;
+        }
+    }
+    if (glfwGetKey(window, GLFW_KEY_1)) {
+        if (stateCam == 0) {
+            stateCam = 1;
+            rdCamPos = cameraPos;
+        }
+        else if (stateCam == 1) {
+            stateCam = 0;
+        }
+        if (stateCam == 2) {
+            stateCam = 0;
+        }
+    }
+
+    if (glfwGetKey(window, GLFW_KEY_2)) {
+        stateCam = 2;
+        brCamPos = glm::vec3{ cameraPos.x, cameraPos.y + 10, cameraPos.z };
+    }
+       
+ 
+    
     if (glfwGetKey(window, GLFW_KEY_I)) brightness += 1.0f;
     if (glfwGetKey(window, GLFW_KEY_K)) brightness -= 1.0f;
 };
@@ -152,6 +296,39 @@ GLuint createTexture(const char* fileName) {
         img_height,
         0,
         GL_RGBA,
+        GL_UNSIGNED_BYTE,
+        tex_bytes);
+    glGenerateMipmap(GL_TEXTURE_2D);
+    stbi_image_free(tex_bytes);
+
+    return texture;
+}
+GLuint createTextureJPG(const char* fileName) {
+    int img_width, img_height, colorChannels;
+
+    unsigned char* tex_bytes = stbi_load(
+        fileName,
+        &img_width,
+        &img_height,
+        &colorChannels,
+        0
+    );
+
+    GLuint texture;
+
+    glGenTextures(1, &texture);
+
+    glActiveTexture(GL_TEXTURE0);
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    glTexImage2D(GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        img_width,
+        img_height,
+        0,
+        GL_RGB,
         GL_UNSIGNED_BYTE,
         tex_bytes);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -436,9 +613,7 @@ int main(void)
 {
     GLFWwindow* window;
 
-    float height = 1280.f;
-    float width = 1280.f;
-
+    
 
 
     /* Initialize the library */
@@ -475,6 +650,8 @@ int main(void)
         vecTextures.push_back(createTexture(texturePath));
     }
 
+    GLuint mainObjTex = createTextureJPG("3D/main_hull_Base_Color.png");
+
     //getting the paths of obj files
     std::vector<std::string> vecPaths;
     vecPaths.push_back("3D/CamoStellarJet.obj");
@@ -491,7 +668,8 @@ int main(void)
         std::vector<GLfloat> fullVertexData = getFullVertexData(path);
 
         vecModels.push_back(new Model3D(
-            {posIndex, 0, 0},
+            //{posIndex, 0, 0},
+            {posIndex,0,-10},
             fullVertexData,
             "Shaders/mainObj.vert", "Shaders/mainObj.frag"
         ));
@@ -499,15 +677,24 @@ int main(void)
         posIndex -= 1.f;
     }
 
+   
+
+
     //      OBJ CREATIONS
     Shader voxelShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
+    Model3D* main_object = new Model3D({ 0,0,0 },
+        getFullVertexData("3D/miniSub02.obj"),
+        "Shaders/mainObj.vert", "Shaders/mainObj.frag" 
+    );
+    
+    Player = main_object;
 
     //      OBJECTS VAO
     for (Model3D* model : vecModels)
     {
         model->initVAO();
     }
-
+    main_object->initVAO();
     //      NORMAL MAP TEXTURE
     //Gluin norm_tex = createNormTexture("");
 
@@ -515,13 +702,14 @@ int main(void)
     Shader skyboxShader("Shaders/skybox.vert", "Shaders/skybox.frag");
 
     //faces of the skybox
+
     std::string facesSkybox[]{
-        "Skybox/image3x2.png", //RIGHT
-        "Skybox/image1x2.png", //left
-        "Skybox/image2x1.png", //up
-        "Skybox/image2x3.png", //down
-        "Skybox/image2x2.png", //front
-        "Skybox/image4x2.png", //back
+        "Skybox/Underwater Box_Front.jpg",//RIGHT front
+        "Skybox/Underwater Box_Back.jpg", //left back
+        "Skybox/Underwater Box_Top.jpg", //up
+        "Skybox/Underwater Box_Bottom.jpg", //down
+        "Skybox/Underwater Box_Right.jpg",//front right
+        "Skybox/Underwater Box_Left.jpg",//back left
     };
 
     unsigned int skyboxTex;
@@ -548,11 +736,11 @@ int main(void)
             glTexImage2D(
                 GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,
                 0,
-                GL_RGBA,
+                GL_RGB,
                 w,
                 h,
                 0,
-                GL_RGBA,
+                GL_RGB,
                 GL_UNSIGNED_BYTE,
                 data
             );
@@ -669,8 +857,9 @@ int main(void)
     //      LIGHT
     Light mainLight(lightPos, lightColor, ambientStr, specStr, specPhong);
 
-    //      CAMERA
-    PerspectiveCamera perca(cameraPos, WorldUp, Front, 60.f, height, width);
+    
+    
+
 
     //enable blending
     glEnable(GL_BLEND);
@@ -692,11 +881,30 @@ int main(void)
         /* Render here */
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
+        glm::mat4 viewMatrix = glm::mat4{ 1.0f };
         
         //set camera to be MOVEABLE i.e. can be influenced
-        perca.setCameraPos(cameraPos);
-        perca.setFront(Front);
-        glm::mat4 viewMatrix = perca.getViewMat();
+        switch (stateCam) {
+        case 0:
+
+            Unerca.setCameraPos(cameraPos);
+            Unerca.setFront(Front);
+            viewMatrix = Unerca.getViewMat();
+            break;
+        case 1:
+            
+            
+            Therca.setFront(Player->getPosition());
+            Therca.setCameraPos(rdCamPos);
+            viewMatrix = Therca.getViewMat();
+            break;
+        case 2:
+            Berca.setFront({0.f,-1.f,0.f});
+            Berca.setCameraPos(brCamPos);
+            viewMatrix = Berca.getViewMat();
+            break;
+        }
+        
 
         //      SKYBOX
         glDepthMask(GL_FALSE);
@@ -728,7 +936,19 @@ int main(void)
         {
             model->getShader()->use();
             //camera
-            perca.perfromSpecifics(model->getShader());
+            switch (stateCam) {
+            case 0:
+                Unerca.perfromSpecifics(model->getShader());
+                break;
+            case 1:
+                Therca.perfromSpecifics(model->getShader());
+                break;
+            case 2:
+                Berca.perfromSpecifics(model->getShader());
+                break;
+            }
+           
+            
             //light
             mainLight.attachFundamentals(model->getShader());
             model->getShader()->setFloat("brightness", brightness);
@@ -739,11 +959,37 @@ int main(void)
             textureIndex++;
         }
 
-        /* Swap front and back buffers */
-        glfwSwapBuffers(window);
+       
+            main_object->getShader()->use();
+            switch (stateCam) {
+            case 0:
+                Unerca.perfromSpecifics(main_object->getShader());
+                break;
+            case 1:
+                Therca.perfromSpecifics(main_object->getShader());
+                break;
+            case 2:
+                Berca.perfromSpecifics(main_object->getShader());
+                break;
+                
+            }
 
-        /* Poll for and process events */
-        glfwPollEvents();
+            
+
+            mainLight.attachFundamentals(main_object->getShader());
+
+            main_object->getShader()->setFloat("brightness", brightness);
+
+            useTexture(main_object->getShaderID(), mainObjTex);
+            main_object->draw();
+        
+            /* Swap front and back buffers */
+            glfwSwapBuffers(window);
+
+            /* Poll for and process events */
+            glfwPollEvents();
+     
+        
         
 
     }

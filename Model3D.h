@@ -41,7 +41,7 @@ public:
 	void draw();
 	void draw(Shader* shaderProgB, GLuint* VAOB, std::vector<GLfloat>* fullVertexDataB);
 
-	void rotate(char axis, float theta);
+	void rotate(char axis,char direction);
 
 	void initVAO();
 
@@ -54,4 +54,6 @@ public:
 public:
 	Shader* getShader();
 	unsigned int getShaderID();
+	float getYrot();
+	glm::vec3 getPosition();
 };
