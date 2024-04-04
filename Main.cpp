@@ -76,9 +76,9 @@ float width = 1280.f;
 Player* P1;
 //      CAMERA
 PerspectiveCamera perca(cameraPos, WorldUp, Front, 60.f, height, width, 100,false);//test view
-PerspectiveCamera Therca({ 0,15,28 }, WorldUp, Front, 60.f, height, width, 50,true);//Third person view
-PerspectiveCamera Unerca({ 0,0,0 }, WorldUp, Front, 60.f, height, width, 100,false);//First person view
-OrthoCamera Berca({ 0,10.f,0 }, WorldUp, {0,-1,0}, 60.f, height, width, 1000, true); //bird view
+PerspectiveCamera Therca({ 0,15,28 }, WorldUp, Front, 60.f, height, width, 30,true);//Third person view
+PerspectiveCamera Unerca({ 0,0,0 }, WorldUp, Front, 60.f, height, width, 50,false);//First person view
+OrthoCamera Berca({ 0,10.f,0 }, WorldUp, {0,-1,0}, 60.f, height, width, 100, true); //bird view
 
 void mouse_callback(GLFWwindow* window, double xposIn, double yposIn)
 {
@@ -184,9 +184,12 @@ void Key_Callback(GLFWwindow* window,
 
         }
         if (glfwGetKey(window, GLFW_KEY_E)) {
-            glm::vec3 pos = P1->getPosition() - glm::vec3{ 0,1,0 };
-            P1->setPosition(pos);
-            cameraPos -= glm::vec3{ 0.f, 1.f, 0.f };
+            if (P1->getPosition().y != 0) {
+                glm::vec3 pos = P1->getPosition() - glm::vec3{ 0,1,0 };
+                P1->setPosition(pos);
+                cameraPos -= glm::vec3{ 0.f, 1.f, 0.f };
+            }
+            
 
             glm::vec3 direction;
 
@@ -283,6 +286,7 @@ void Key_Callback(GLFWwindow* window,
     
     if (glfwGetKey(window, GLFW_KEY_I)) brightness += 1.0f;
     if (glfwGetKey(window, GLFW_KEY_K)) brightness -= 1.0f;
+    std::cout << "X: " << P1->getPosition().x << " Y: " << P1->getPosition().y << " Z: " << P1->getPosition().z << std::endl;
 };
 
 GLuint createTexture(const char* fileName) {
