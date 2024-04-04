@@ -352,40 +352,6 @@ GLuint createTextureJPG(const char* fileName) {
     return texture;
 }
 
-GLuint createNormalTextureJPG(const char* fileName) {
-    int img_width, img_height, colorChannels;
-
-    unsigned char* tex_bytes = stbi_load(
-        fileName,
-        &img_width,
-        &img_height,
-        &colorChannels,
-        0
-    );
-
-    GLuint texture;
-
-    glGenTextures(1, &texture);
-
-    glActiveTexture(GL_TEXTURE1);
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    glTexImage2D(GL_TEXTURE_2D,
-        0,
-        GL_RGB,
-        img_width,
-        img_height,
-        0,
-        GL_RGB,
-        GL_UNSIGNED_BYTE,
-        tex_bytes);
-    glGenerateMipmap(GL_TEXTURE_2D);
-    stbi_image_free(tex_bytes);
-
-    return texture;
-}
-
 void useTexture(GLuint shaderProg, GLuint texture) {
     glActiveTexture(GL_TEXTURE0);
     GLuint mainObjtex0Address = glGetUniformLocation(shaderProg, "tex0");
@@ -708,7 +674,7 @@ int main(void)
     }
 
     GLuint mainObjTex = createTextureJPG("3D/main_hull_Base_Color.png");
-    GLuint normalMainObjTex = createNormalTextureJPG("3D/main_hull_Normal_OpenGL.png");
+    GLuint normalMainObjTex = createNormTexture("3D/main_hull_Normal_OpenGL.png");
 
    
     //getting the paths of obj files
@@ -730,7 +696,7 @@ int main(void)
             //{posIndex, 0, 0},
             {posIndex,0,-10},
             fullVertexData,
-            "Shaders/mainObj.vert", "Shaders/mainObj.frag", 0.0f
+            "Shaders/ship.vert", "Shaders/ship.frag", 0.0f
         ));
 
         posIndex -= 1.f;
@@ -746,7 +712,6 @@ int main(void)
 
 
     //      OBJ CREATIONS
-    Shader voxelShader("Shaders/mainObj.vert", "Shaders/mainObj.frag");
     Player* main_object = new Player({ 0,0,0 },
         getFullVertexData("3D/miniSub02.obj"),
         "Shaders/mainObj.vert", "Shaders/mainObj.frag" , 180.f
@@ -760,8 +725,6 @@ int main(void)
         model->initVAO();
     }
     main_object->initVAO();
-    //      NORMAL MAP TEXTURE
-    //Gluin norm_tex = createNormTexture("");
 
     //shader of skybox
     Shader skyboxShader("Shaders/skybox.vert", "Shaders/skybox.frag");
@@ -1050,11 +1013,12 @@ int main(void)
             }
 
             //light
+            useTexture(main_object->getShaderID(), mainObjTex);
+            useNormTexture(main_object->getShaderID(), normalMainObjTex);
+
             dirLight.attachSpecifics(main_object->getShader());
             pointLight.attachSpecifics(main_object->getShader());
 
-            useTexture(main_object->getShaderID(), mainObjTex);
-            useNormTexture(main_object->getShaderID(), normalMainObjTex);
             main_object->draw();
         
             /* Swap front and back buffers */

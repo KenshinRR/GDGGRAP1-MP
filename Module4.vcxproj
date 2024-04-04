@@ -192,6 +192,8 @@
   <ItemGroup>
     <None Include="Shaders\mainObj.frag" />
     <None Include="Shaders\mainObj.vert" />
+    <None Include="Shaders\ship.frag" />
+    <None Include="Shaders\ship.vert" />
     <None Include="Shaders\skybox.frag" />
     <None Include="Shaders\skybox.vert" />
   </ItemGroup>

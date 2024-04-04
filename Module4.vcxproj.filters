@@ -97,5 +97,7 @@
     <None Include="Shaders\skybox.vert" />
     <None Include="Shaders\mainObj.vert" />
     <None Include="Shaders\mainObj.frag" />
+    <None Include="Shaders\ship.frag" />
+    <None Include="Shaders\ship.vert" />
   </ItemGroup>
 </Project>
